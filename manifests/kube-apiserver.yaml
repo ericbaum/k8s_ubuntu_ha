@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  labels:
+    component: kube-apiserver
+    tier: control-plane
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - command:
+    - kube-apiserver
+    - --advertise-address=${LB_ADDR}
+    - --tls-ca-file=/srv/pki/ca.crt
+    - --tls-cert-file=/srv/pki/server.crt
+    - --tls-private-key-file=/srv/pki/server.key
+    - --allow-privileged=true
+    - --etcd-servers=http://127.0.0.1:2379
+    - --client-ca-file=/srv/pki/ca.crt
+    - --service-cluster-ip-range=10.96.0.0/12
+    - --insecure-port=0
+    - --secure-port=6443
+    - --requestheader-extra-headers-prefix=X-Remote-Extra-
+    - --requestheader-username-headers=X-Remote-User
+    - --requestheader-group-headers=X-Remote-Group
+    - --logtostderr=true
+    - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+    - --admission-control=AlwaysPullImages,Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,NodeRestriction,ResourceQuota
+    - --authorization-mode=Node,RBAC
+    - --anonymous-auth=false
+    - --kubelet-certificate-authority=/srv/pki/ca.crt
+    - --kubelet-client-certificate=/srv/pki/node.crt
+    - --kubelet-client-key=/srv/pki/node.key
+    - --requestheader-client-ca-file=/srv/pki/ca.crt
+    - --proxy-client-cert-file=/srv/pki/client.crt
+    - --proxy-client-key-file=/srv/pki/client.key
+    - --service-account-key-file=/srv/pki/sa.pub
+    image: gcr.io/google_containers/kube-apiserver-amd64:v1.9.3
+    livenessProbe:
+      failureThreshold: 8
+      httpGet:
+        host: ${NODE_IP}
+        path: /healthz
+        port: 6443
+        scheme: HTTPS
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+    name: kube-apiserver
+    resources:
+      requests:
+        cpu: 250m
+    volumeMounts:
+    - mountPath: /etc/pki
+      name: ca-certs-etc-pki
+      readOnly: true
+    - mountPath: /srv/pki
+      name: k8s-certs
+      readOnly: true
+    - mountPath: /etc/ssl/certs
+      name: ca-certs
+      readOnly: true
+  hostNetwork: true
+  volumes:
+  - hostPath:
+      path: /srv/pki
+      type: DirectoryOrCreate
+    name: k8s-certs
+  - hostPath:
+      path: /etc/ssl/certs
+      type: DirectoryOrCreate
+    name: ca-certs
+  - hostPath:
+      path: /etc/pki
+      type: DirectoryOrCreate
+    name: ca-certs-etc-pki

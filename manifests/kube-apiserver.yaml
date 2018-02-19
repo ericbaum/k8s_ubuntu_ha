@@ -20,7 +20,8 @@ spec:
     - --etcd-servers=http://127.0.0.1:2379
     - --client-ca-file=/srv/pki/ca.crt
     - --service-cluster-ip-range=10.96.0.0/12
-    - --insecure-port=0
+    - --insecure-port=6444
+    - --insecure-bind-address=127.0.0.1
     - --secure-port=6443
     - --requestheader-extra-headers-prefix=X-Remote-Extra-
     - --requestheader-username-headers=X-Remote-User

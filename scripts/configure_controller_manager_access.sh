@@ -7,7 +7,7 @@ clusters:
 - name: kubernetes
   cluster:
     certificate-authority: /srv/pki/ca.crt
-    server: https://10.50.11.32:6443
+    server: http://127.0.0.1:6444
 users:
 - name: system:kube-controller-manager
   user:

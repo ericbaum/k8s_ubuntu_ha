@@ -11,11 +11,11 @@ EOF
 
 sudo openssl genrsa -out ${CA_DIR}/tmp.key 2048
 
-sudo openssl req -new -key ${CA_DIR}/tmp.key -subj "/CN=system:node:${NODE_NAME}/O=system:nodes" -out ${CA_DIR}/tmp.csr -config ${CA_DIR}/tmp.cnf
+sudo openssl req -new -key ${CA_DIR}/tmp.key -subj "/CN=kubernetes-admin/O=system:masters" -out ${CA_DIR}/tmp.csr -config ${CA_DIR}/tmp.cnf
 
 sudo openssl x509 -req -in ${CA_DIR}/tmp.csr -CA ${CA_DIR}/ca.crt -CAkey ${CA_DIR}/ca.key -CAcreateserial -out ${CA_DIR}/tmp.crt -days 10000 -extensions v3_req -extfile ${CA_DIR}/tmp.cnf
 
-cat <<EOF | sudo tee /srv/kubernetes/kubelet.conf
+cat <<EOF | sudo tee /srv/kubernetes/admin.conf
 apiVersion: v1
 kind: Config
 clusters:
@@ -24,16 +24,16 @@ clusters:
     certificate-authority-data: $(cat ${CA_DIR}/ca.crt | base64 | tr -d '\n')
     server: https://${LB_IP}:6443
 users:
-- name: system:node:${NODE_NAME}
+- name: kubernetes-admin
   user:
     client-certificate-data: $(cat ${CA_DIR}/tmp.crt | base64 | tr -d '\n')
     client-key-data: $(cat ${CA_DIR}/tmp.key | base64 | tr -d '\n')
 contexts:
 - context:
     cluster: kubernetes
-    user: system:node:${NODE_NAME}
-  name: node@kubernetes
-current-context: node@kubernetes
+    user: kubernetes-admin
+  name: kubernetes-admin@kubernetes
+current-context: kubernetes-admin@kubernetes
 EOF
 
 sudo rm ${CA_DIR}/tmp*

@@ -28,7 +28,8 @@ On all nodes, create the following environment variables and folders:
 $ export NODE_NAME=
 $ export NODE_IP=
 $ export LB_IP=
-$ export CA_DIR=/srv/pki
+$ export INTERNAL_IP=10.96.0.1
+$ export CA_DIR=/srv/kubernetes/pki
 $ sudo mkdir -p /srv/kubernetes/manifests
 $ sudo mkdir -p ${CA_DIR} 
 ```
@@ -100,14 +101,10 @@ $ sudo systemctl daemon-reload
 Run the following commands on every node
 
 ```bash
+$ ./scripts/configure_admin_access.sh
 $ ./scripts/configure_kubelet_access.sh
-```
-
-Restart the kubelet process
-
-```bash
-$ sudo systemctl enable kubelet
-$ sudo systemctl restart kubelet
+$ ./scripts/configure_controller_manager_access.sh
+$ ./scripts/configure_scheduler_access.sh
 ```
 
 ## Kubernetes controller services manifests
@@ -125,7 +122,18 @@ $ sudo mkdir -p /etc/ssl/certs
 To do so, edit the manifest files on the manifests folders with information
 adequate to each of the nodes and copy all of them to the folder '/srv/kubernetes/manifests' 
 
+## Restart the kubelet process
+
+Restart the kubelet process
+
+```bash
+$ sudo systemctl enable kubelet
+$ sudo systemctl restart kubelet
+```
+
+
 
 * TODO:
-etcd tls
-colocar dns name nos certs de nodes
+  * etcd tls
+  * improve manifest copy
+  * api server liveness probe failing

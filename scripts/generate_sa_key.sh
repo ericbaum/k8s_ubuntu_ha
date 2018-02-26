@@ -2,4 +2,4 @@
 
 sudo openssl genrsa -out ${CA_DIR}/sa.key 2048
 
-sudo openssl rsa -in sa.key -pubout -out sa.pub
+sudo openssl rsa -in ${CA_DIR}/sa.key -pubout -out ${CA_DIR}/sa.pub

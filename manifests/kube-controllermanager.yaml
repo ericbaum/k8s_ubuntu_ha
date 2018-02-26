@@ -13,13 +13,13 @@ spec:
   - command:
     - kube-controller-manager
     - --controllers=*,bootstrapsigner,tokencleaner
-    - --root-ca-file=/srv/pki/ca.crt
-    - --cluster-signing-cert-file=/srv/pki/ca.crt
+    - --root-ca-file=/srv/kubernetes/pki/ca.crt
+    - --cluster-signing-cert-file=/srv/kubernetes/pki/ca.crt
     - --address=127.0.0.1
     - --kubeconfig=/srv/kubernetes/controller-manager.conf
     - --use-service-account-credentials=true
-    - --service-account-private-key-file=/srv/pki/sa.key
-    - --cluster-signing-key-file=/srv/pki/ca.key
+    - --service-account-private-key-file=/srv/kubernetes/pki/sa.key
+    - --cluster-signing-key-file=/srv/kubernetes/pki/ca.key
     - --leader-elect=true
     image: gcr.io/google_containers/kube-controller-manager-amd64:v1.9.3
     livenessProbe:
@@ -44,7 +44,7 @@ spec:
     - mountPath: /etc/pki
       name: ca-certs-etc-pki
       readOnly: true
-    - mountPath: /srv/pki
+    - mountPath: /srv/kubernetes/pki
       name: k8s-certs
       readOnly: true
     - mountPath: /etc/ssl/certs
@@ -53,7 +53,7 @@ spec:
   hostNetwork: true
   volumes:
   - hostPath:
-      path: /srv/pki
+      path: /srv/kubernetes/pki
       type: DirectoryOrCreate
     name: k8s-certs
   - hostPath:

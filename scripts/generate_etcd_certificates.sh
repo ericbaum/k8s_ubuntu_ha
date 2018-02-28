@@ -1,17 +1,14 @@
 #!/bin/bash -x
-sudo su
 
-export CA_DIR=/srv/kubernetes/pki/
+sudo curl -o /usr/local/bin/cfssl https://pkg.cfssl.org/R1.2/cfssl_linux-amd64
+sudo curl -o /usr/local/bin/cfssljson https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
+sudo chmod +x /usr/local/bin/cfssl*
 
-curl -o /usr/local/bin/cfssl https://pkg.cfssl.org/R1.2/cfssl_linux-amd64
-curl -o /usr/local/bin/cfssljson https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
-chmod +x /usr/local/bin/cfssl*
-
-mkdir -p ${CA_DIR}/etcd
+sudo mkdir -p ${CA_DIR}/etcd
 
 cd ${CA_DIR}/etcd
 
-cat > ca-config.json <<EOF
+cat <<EOF | sudo tee ca-config.json
 {
     "signing": {
         "default": {
@@ -49,7 +46,7 @@ cat > ca-config.json <<EOF
 }
 EOF
 
-cat > ca-csr.json <<EOF
+cat <<EOF | sudo tee ca-csr.json
 {
     "CN": "etcd",
     "key": {
@@ -59,9 +56,9 @@ cat > ca-csr.json <<EOF
 }
 EOF
 
-cfssl gencert -initca ca-csr.json | cfssljson -bare ca -
+sudo cfssl gencert -initca ca-csr.json | sudo cfssljson -bare ca -
 
-cat > client.json <<EOF
+cat <<EOF | sudo tee client.json
 {
     "CN": "client",
     "key": {
@@ -71,8 +68,6 @@ cat > client.json <<EOF
 }
 EOF
 
-cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client client.json | cfssljson -bare client
+sudo cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client client.json | sudo cfssljson -bare client
 
 cd -
-
-exit

@@ -38,28 +38,10 @@ sudo mkdir -p ${CA_DIR}
 
 Run the commands to generate the CA and API certificates on one of the master nodes
 
-### CA Certificate:
+### CA, API Server, Service Account and Client Certificats:
 
 ```bash
-$ ./scripts/generate_ca.sh
-```
-
-### API Server Certificate:
-
-```bash
-$ ./scripts/generate_api_server_key.sh
-```
-
-### Service Account key:
-
-```bash
-$ ./scripts/generate_sa_key.sh
-```
-
-### Client certificate:
-
-```bash
-$ ./scripts/generate_client_key.sh
+$ ./scripts/generate_kubernetes_certificates.sh
 ```
 
 After generating the certificates, copy API, CA, Client and SA Certificates to all cluster nodes:
@@ -118,10 +100,7 @@ $ sudo systemctl daemon-reload
 Run the following commands on every node
 
 ```bash
-$ ./scripts/configure_admin_access.sh
-$ ./scripts/configure_kubelet_access.sh
-$ ./scripts/configure_controller_manager_access.sh
-$ ./scripts/configure_scheduler_access.sh
+$ ./scripts/configure_services_access.sh
 ```
 
 ## Kubernetes controller services manifests
@@ -136,9 +115,18 @@ sudo mkdir -p /etc/pki
 sudo mkdir -p /etc/ssl/certs
 ```
 
-To do so, edit the manifest files on the manifests folders with information adequate to each of the nodes and copy all of them to the folder '/srv/kubernetes/manifests'
+Now setup the environment variables equally on all nodes and run the following script to setup the manifests for every service
 
-The manifests that require edition are 'etcd.yaml' and 'kube-apiserver.yaml' where some node names and IPs must be replaced with the actual values.
+```bash
+export NODE1_NAME=
+export NODE1_IP=
+export NODE2_NAME=
+export NODE2IP=
+export NODE3_NAME=
+export NODE3_IP=
+
+./scripts/write_manifests.sh
+```
 
 ## Restart the kubelet process
 
@@ -172,7 +160,13 @@ $ kubectl patch node ${NODE_NAME} -p '{"metadata": {"labels": {"node-role.kubern
 ```bash
 $ kubectl create -n kube-system configmap kubeadm-config --from-file=MasterConfiguration=/srv/kubernetes/admin.conf
 ```
+## Install the addon services
 
+### Kube-Proxy
+# TODO: Do this
+
+### Kube-DNS
+# TODO: Do this
 ## Instantiate a CNI network module
 
 ```bash
@@ -180,7 +174,7 @@ $ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl vers
 ```
 
 * TODO:
-  * improve manifest copy
   * api server liveness probe failing
+  * etcd liveness probe
   * proxy
   * dns

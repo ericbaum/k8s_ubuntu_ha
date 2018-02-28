@@ -1,6 +1,8 @@
 #!/bin/bash -x
 
-cat <<EOF | sudo tee ${CA_DIR}/node-openssl.cnf
+cd ${CA_DIR}
+
+cat <<EOF | sudo tee node-openssl.cnf
 [req]
 req_extensions = v3_req
 distinguished_name = req_distinguished_name
@@ -10,7 +12,9 @@ basicConstraints = CA:FALSE
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 EOF
 
-sudo openssl genrsa -out ${CA_DIR}/node.key 2048
-sudo openssl req -new -key ${CA_DIR}/node.key -subj "/CN=kube-apiserver-kubelet-client/O=system:masters" -out ${CA_DIR}/node.csr -config ${CA_DIR}/node-openssl.cnf
-sudo openssl x509 -req -in ${CA_DIR}/node.csr -CA ${CA_DIR}/ca.crt -CAkey ${CA_DIR}/ca.key -CAcreateserial -out ${CA_DIR}/node.crt -days 10000 -extensions v3_req -extfile ${CA_DIR}/node-openssl.cnf
-sudo openssl x509 -noout -text -in ${CA_DIR}/node.crt
+sudo openssl genrsa -out node.key 2048
+sudo openssl req -new -key node.key -subj "/CN=kube-apiserver-kubelet-client/O=system:masters" -out node.csr -config node-openssl.cnf
+sudo openssl x509 -req -in node.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out node.crt -days 10000 -extensions v3_req -extfile node-openssl.cnf
+sudo openssl x509 -noout -text -in node.crt
+
+cd -

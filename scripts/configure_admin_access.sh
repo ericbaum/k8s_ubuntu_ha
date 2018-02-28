@@ -1,3 +1,4 @@
+#!/bin/bash -x
 
 cat <<EOF | sudo tee ${CA_DIR}/tmp.cnf
 [req]

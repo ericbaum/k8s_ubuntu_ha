@@ -12,14 +12,22 @@ spec:
   containers:
   - command:
     - etcd
-    - --listen-client-urls=http://127.0.0.1:2379,http://${NODE_IP}:2379
-    - --advertise-client-urls=http://${NODE_IP}:2379
+    - --listen-client-urls=http://127.0.0.1:2379,https://${NODE_IP}:2379
+    - --advertise-client-urls=https://${NODE_IP}:2379
     - --data-dir=/var/lib/etcd
     - --name=${NODE_NAME}
-    - --listen-peer-urls=http://${NODE_IP}:2380
+    - --listen-peer-urls=https://${NODE_IP}:2380
     - --initial-cluster-state=new
-    - --initial-cluster=${NODE_NAME}=http://${NODE_IP}:2380,${OTHER_NODE_NAME}=http://${OTHER_NODE_IP}:2380
-    - --initial-advertise-peer-urls=http://${NODE_IP}:2380
+    - --initial-cluster=${NODE_NAME}=https://${NODE_IP}:2380,${OTHER_NODE_NAME}=https://${OTHER_NODE_IP}:2380
+    - --initial-advertise-peer-urls=https://${NODE_IP}:2380
+    - --cert-file=/certs/server.pem
+    - --key-file=/certs/server-key.pem
+    - --client-cert-auth
+    - --trusted-ca-file=/certs/ca.pem
+    - --peer-cert-file=/certs/peer.pem
+    - --peer-key-file=/certs/peer-key.pem
+    - --peer-client-cert-auth
+    - --peer-trusted-ca-file=/certs/ca.pem
     image: gcr.io/google_containers/etcd-amd64:3.1.11
     livenessProbe:
       failureThreshold: 8
@@ -34,9 +42,14 @@ spec:
     volumeMounts:
     - mountPath: /var/lib/etcd
       name: etcd
+    - mountPath: /certs
+      name: certs
   hostNetwork: true
   volumes:
   - hostPath:
       path: /var/lib/etcd
       type: DirectoryOrCreate
     name: etcd
+  - hostPath:
+      path: /srv/kubernetes/pki/etcd
+    name: certs

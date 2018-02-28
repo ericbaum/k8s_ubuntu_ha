@@ -12,16 +12,21 @@ spec:
   containers:
   - command:
     - kube-apiserver
+    - --apiserver-count=3
     - --advertise-address=${LB_ADDR}
     - --tls-ca-file=/srv/kubernetes/pki/ca.crt
     - --tls-cert-file=/srv/kubernetes/pki/server.crt
     - --tls-private-key-file=/srv/kubernetes/pki/server.key
     - --allow-privileged=true
-    - --etcd-servers=http://127.0.0.1:2379
+    - --etcd-servers=https://{NODE_IP}:2379,https://{NODE2_IP}:2379,https://{NODE3_IP}:2379
+    - --etcd-cafile=/srv/kubernetes/pki/etcd/ca.pem
+    - --etcd-certfile=/srv/kubernetes/pki/etcd/client.pem
+    - --etcd-keyfile=/srv/kubernetes/pki/etcd/client-key.pem
     - --client-ca-file=/srv/kubernetes/pki/ca.crt
     - --service-cluster-ip-range=10.96.0.0/12
     - --insecure-port=0
     - --secure-port=6443
+    - --enable-bootstrap-token-auth=true
     - --requestheader-extra-headers-prefix=X-Remote-Extra-
     - --requestheader-username-headers=X-Remote-User
     - --requestheader-group-headers=X-Remote-Group

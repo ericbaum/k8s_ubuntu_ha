@@ -14,7 +14,7 @@ The expected results of this instructions are:
 
 ## Install Docker
 
-Run the docker installer script:
+Run the docker installer script on all nodes:
 
 ```bash
 $ ./scripts/install_docker.sh
@@ -25,16 +25,16 @@ $ ./scripts/install_docker.sh
 On all nodes, create the following environment variables and folders:
 
 ```bash
-$ export NODE_NAME=
-$ export NODE_IP=
-$ export LB_IP=
-$ export INTERNAL_IP=10.96.0.1
-$ export CA_DIR=/srv/kubernetes/pki
-$ sudo mkdir -p /srv/kubernetes/manifests
-$ sudo mkdir -p ${CA_DIR} 
+export NODE_NAME=
+export NODE_IP=
+export LB_IP=
+export INTERNAL_IP=10.96.0.1
+export CA_DIR=/srv/kubernetes/pki
+sudo mkdir -p /srv/kubernetes/manifests
+sudo mkdir -p ${CA_DIR} 
 ```
 
-## Generate Keys and Certificates
+## Generate Keys and Certificates for Kubernetes
 
 Run the commands to generate the CA and API certificates on one of the master nodes
 
@@ -78,6 +78,23 @@ On every node it is necessary to generate the node access key by running the fol
 $ ./scripts/generate_node_key.sh
 ```
  
+## Generate Keys and Certificates for Etcd
+
+On an initial node, run the following script:
+
+```bash
+$ ./scripts/generate_etcd_certificates.sh
+```
+
+Copy the files 'ca.pem', 'ca-key.pem', 'client.pem', 'client-key.pem' and 'ca-config.json' that were generated to the ${CA_DIR}/etcd of all other nodes that will run etcd.
+
+After copying the files, run the following script on each of the nodes:
+
+```bash
+$ ./scripts/generate_etcd_local.sh
+```
+
+
 ## Install Kubernetes Services
 
 Run the kubernetes services install script on every node
@@ -114,26 +131,56 @@ Now it is necessary to add the kubernetes controller service manifests to every 
 First, create the following folders on every master node of the cluster:
 
 ```bash
-$ sudo mkdir -p /var/lib/etcd
-$ sudo mkdir -p /etc/pki
-$ sudo mkdir -p /etc/ssl/certs
+sudo mkdir -p /var/lib/etcd
+sudo mkdir -p /etc/pki
+sudo mkdir -p /etc/ssl/certs
 ```
 
-To do so, edit the manifest files on the manifests folders with information
-adequate to each of the nodes and copy all of them to the folder '/srv/kubernetes/manifests' 
+To do so, edit the manifest files on the manifests folders with information adequate to each of the nodes and copy all of them to the folder '/srv/kubernetes/manifests'
+
+The manifests that require edition are 'etcd.yaml' and 'kube-apiserver.yaml' where some node names and IPs must be replaced with the actual values.
 
 ## Restart the kubelet process
 
 Restart the kubelet process
 
 ```bash
-$ sudo systemctl enable kubelet
-$ sudo systemctl restart kubelet
+sudo systemctl enable kubelet
+sudo systemctl restart kubelet
 ```
 
+## Accessing the cluster with the kubectl client
 
+To access the cluster using the kubectl cluster, execute the following commands:
+
+```bash
+$ mkdir -p ~/.kube
+$ cp /src/kubernetes/admin.conf ~/.kube/config
+```
+
+Then run any kubernetes command using the kubectl cli client to verify that it is working
+
+## Set nodes master role label
+
+
+For each of the nodes, run:
+```bash
+$ kubectl patch node ${NODE_NAME} -p '{"metadata": {"labels": {"node-role.kubernetes.io/master": ""}}}'
+```
+## Upload the configuration file to the cluster
+
+```bash
+$ kubectl create -n kube-system configmap kubeadm-config --from-file=MasterConfiguration=/srv/kubernetes/admin.conf
+```
+
+## Instantiate a CNI network module
+
+```bash
+$ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+```
 
 * TODO:
-  * etcd tls
   * improve manifest copy
   * api server liveness probe failing
+  * proxy
+  * dns

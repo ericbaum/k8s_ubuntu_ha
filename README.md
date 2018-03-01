@@ -3,21 +3,21 @@
 
 Repository with instructions and scripts to initialize a HA Kubernetes cluster
 
-The steps presented below will lead to a kubernetes cluster installation with controller HA
+The steps presented below will lead to a kubernetes cluster installation with controller HA behind a Load Balancer
 
 All instructions are supposed to be run over Ubuntu 16.04
 
 The expected results of this instructions are:
 
  * a kubernetes cluster running on High Availability
- *
+ * Kube Version 1.9.3
 
 ## Install Docker
 
 Run the docker installer script on all nodes:
 
 ```bash
-$ ./scripts/install_docker.sh
+./scripts/install_docker.sh
 ```
 
 ## Nodes initial configuration
@@ -41,7 +41,7 @@ Run the commands to generate the CA and API certificates on one of the master no
 ### CA, API Server, Service Account and Client Certificats:
 
 ```bash
-$ ./scripts/generate_kubernetes_certificates.sh
+./scripts/generate_kubernetes_certificates.sh
 ```
 
 After generating the certificates, copy API, CA, Client and SA Certificates to all cluster nodes:
@@ -49,7 +49,7 @@ After generating the certificates, copy API, CA, Client and SA Certificates to a
 Copy the files from the master node
 
 ```bash
-$ sudo scp -r ${CA_DIR} NODE_IP:${CA_DIR}
+sudo scp -r ${CA_DIR} NODE_IP:${CA_DIR}
 ```
 
 ### Generate Kubelet Access Keys
@@ -57,7 +57,7 @@ $ sudo scp -r ${CA_DIR} NODE_IP:${CA_DIR}
 On every node it is necessary to generate the node access key by running the following command and substituting the node ip with the proper value:
 
 ```bash
-$ ./scripts/generate_node_key.sh
+./scripts/generate_node_key.sh
 ```
  
 ## Generate Keys and Certificates for Etcd
@@ -65,7 +65,7 @@ $ ./scripts/generate_node_key.sh
 On an initial node, run the following script:
 
 ```bash
-$ ./scripts/generate_etcd_certificates.sh
+./scripts/generate_etcd_certificates.sh
 ```
 
 Copy the files 'ca.pem', 'ca-key.pem', 'client.pem', 'client-key.pem' and 'ca-config.json' that were generated to the ${CA_DIR}/etcd of all other nodes that will run etcd.
@@ -73,7 +73,7 @@ Copy the files 'ca.pem', 'ca-key.pem', 'client.pem', 'client-key.pem' and 'ca-co
 After copying the files, run the following script on each of the nodes:
 
 ```bash
-$ ./scripts/generate_etcd_local.sh
+./scripts/generate_etcd_local.sh
 ```
 
 
@@ -82,7 +82,7 @@ $ ./scripts/generate_etcd_local.sh
 Run the kubernetes services install script on every node
 
 ```bash
-$ ./scripts/install_kube_services.sh
+./scripts/install_kube_services.sh
 ```
 
 ## Configure kubelet service
@@ -90,9 +90,9 @@ $ ./scripts/install_kube_services.sh
 Copy the configuration file to the kubelet service configuration directory
 
 ```bash
-$ sudo mkdir -p /etc/systemd/system/kubelet.service.d/
-$ sudo cp config_files/10-kubelet.conf /etc/systemd/system/kubelet.service.d/
-$ sudo systemctl daemon-reload
+sudo mkdir -p /etc/systemd/system/kubelet.service.d/
+sudo cp config_files/10-kubelet.conf /etc/systemd/system/kubelet.service.d/
+sudo systemctl daemon-reload
 ```
 
 ## Create cluster access configuration files
@@ -100,7 +100,7 @@ $ sudo systemctl daemon-reload
 Run the following commands on every node
 
 ```bash
-$ ./scripts/configure_services_access.sh
+./scripts/configure_services_access.sh
 ```
 
 ## Kubernetes controller services manifests
@@ -142,8 +142,8 @@ sudo systemctl restart kubelet
 To access the cluster using the kubectl cluster, execute the following commands:
 
 ```bash
-$ mkdir -p ~/.kube
-$ cp /src/kubernetes/admin.conf ~/.kube/config
+mkdir -p ~/.kube
+sudo cp /srv/kubernetes/admin.conf ~/.kube/config
 ```
 
 Then run any kubernetes command using the kubectl cli client to verify that it is working
@@ -153,28 +153,36 @@ Then run any kubernetes command using the kubectl cli client to verify that it i
 
 For each of the nodes, run:
 ```bash
-$ kubectl patch node ${NODE_NAME} -p '{"metadata": {"labels": {"node-role.kubernetes.io/master": ""}}}'
+kubectl patch node ${NODE_NAME} -p '{"metadata": {"labels": {"node-role.kubernetes.io/master": ""}}}'
 ```
 ## Upload the configuration file to the cluster
 
 ```bash
-$ kubectl create -n kube-system configmap kubeadm-config --from-file=MasterConfiguration=/srv/kubernetes/admin.conf
+kubectl create -n kube-system configmap kubeadm-config --from-file=MasterConfiguration=/srv/kubernetes/admin.conf
 ```
 ## Install the addon services
 
 ### Kube-Proxy
-# TODO: Do this
+
+With the cluster up and running it is necessary to start the kube-proxy service to allow the usage of ClusterIP services
+
+To do so, edit the manifest, setting the correct load balancer IP and execute the following command:
+
+```bash
+kubectl apply -f ./addons/kube-proxy.yaml
+```
 
 ### Kube-DNS
 # TODO: Do this
+
 ## Instantiate a CNI network module
 
 ```bash
-$ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 ```
 
 * TODO:
   * api server liveness probe failing
   * etcd liveness probe
-  * proxy
   * dns
+  * solve kubectl logs and exec problem with certificates

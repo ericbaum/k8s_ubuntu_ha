@@ -50,7 +50,6 @@ spec:
 
 EOF
 
-
 cat <<EOF | sudo tee /srv/kubernetes/manifests/kube-apiserver.yaml
 apiVersion: v1
 kind: Pod

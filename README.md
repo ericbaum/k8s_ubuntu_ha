@@ -31,7 +31,7 @@ export LB_IP=
 export INTERNAL_IP=10.96.0.1
 export CA_DIR=/srv/kubernetes/pki
 sudo mkdir -p /srv/kubernetes/manifests
-sudo mkdir -p ${CA_DIR} 
+sudo mkdir -p ${CA_DIR}/etcd
 ```
 
 ## Generate Keys and Certificates for Kubernetes
@@ -81,6 +81,8 @@ After copying the files, run the following script on each of the nodes:
 
 Run the kubernetes services install script on every node
 
+Swap has to be disabled on all the nodes
+
 ```bash
 ./scripts/install_kube_services.sh
 ```
@@ -121,7 +123,7 @@ Now setup the environment variables equally on all nodes and run the following s
 export NODE1_NAME=
 export NODE1_IP=
 export NODE2_NAME=
-export NODE2IP=
+export NODE2_IP=
 export NODE3_NAME=
 export NODE3_IP=
 
@@ -186,4 +188,3 @@ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl versio
 * TODO:
   * api server liveness probe failing
   * etcd liveness probe
-  * solve kubectl logs and exec problem with certificates

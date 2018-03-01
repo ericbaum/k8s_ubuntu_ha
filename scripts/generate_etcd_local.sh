@@ -6,8 +6,6 @@ sudo chmod +x /usr/local/bin/cfssl*
 
 cd /srv/kubernetes/pki/etcd
 
-# TODO: Find a way of setting the variables below:
-
 cat <<EOF | sudo tee config.json
 {
     "CN": "${NODE_NAME}",

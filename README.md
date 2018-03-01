@@ -173,7 +173,9 @@ kubectl apply -f ./addons/kube-proxy.yaml
 ```
 
 ### Kube-DNS
-# TODO: Do this
+```bash
+kubectl apply -f ./addons/kube-dns.yaml
+```
 
 ## Instantiate a CNI network module
 
@@ -184,5 +186,4 @@ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl versio
 * TODO:
   * api server liveness probe failing
   * etcd liveness probe
-  * dns
   * solve kubectl logs and exec problem with certificates

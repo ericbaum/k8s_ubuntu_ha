@@ -10,6 +10,9 @@ distinguished_name = req_distinguished_name
 [ v3_req ]
 basicConstraints = CA:FALSE
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = @alt_names
+[alt_names]
+IP.1 = ${NODE_IP}
 EOF
 
 sudo openssl genrsa -out node.key 2048
